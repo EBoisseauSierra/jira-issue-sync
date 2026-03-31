@@ -4,6 +4,7 @@
   "description": "GitHub Action: synchronise GitHub issues with Jira tasks",
   "private": true,
   "main": "dist/index.js",
+  "engines": { "node": ">=20" },
   "scripts": {
     "build": "ncc build src/index.ts --out dist --source-map --license licenses.txt",
     "test": "jest",
