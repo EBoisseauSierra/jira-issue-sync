@@ -1,2 +1,6 @@
-.env
-.mcp.json
+node_modules/
+lib/
+*.js.map
+coverage/
+CHANGELOG_RELEASE.md
+licenses.txt
