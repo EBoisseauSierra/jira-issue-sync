@@ -1,5 +1,4 @@
 node_modules/
-lib/
 *.js.map
 coverage/
 CHANGELOG_RELEASE.md
