@@ -28,20 +28,20 @@ jobs:
           jira-base-url: ${{ secrets.JIRA_BASE_URL }}
           jira-user-email: ${{ secrets.JIRA_USER_EMAIL }}
           jira-api-token: ${{ secrets.JIRA_API_TOKEN }}
-          jira-project-key: 'MYPROJECT'
-          jira-epic-key: 'MYPROJECT-42'
+          jira-project-key: ${{ vars.JIRA_PROJECT_KEY }}
+          jira-epic-key: ${{ vars.JIRA_EPIC_KEY }}
 ```
 
 ## Inputs
 
-| Input | Required | Description |
+| Input | Required | Description | Example |
 |---|---|---|
-| `jira-base-url` | yes | Your Atlassian domain, e.g. `https://your-org.atlassian.net` |
-| `jira-user-email` | yes | Email of the Jira user whose API token you are using |
-| `jira-api-token` | yes | Jira API token — store this as a GitHub secret |
-| `jira-project-key` | yes | Key of the Jira project where tasks will be created |
-| `jira-epic-key` | yes | Key of the Jira Epic to link new tasks to |
-| `github-token` | no | GitHub token for posting comments. Defaults to `${{ github.token }}` |
+| `jira-base-url` | yes | Your Atlassian domain, e.g. `https://your-org.atlassian.net` | `https://your-org.atlassian.net` |
+| `jira-user-email` | yes | Email of the Jira user whose API token you are using | `user@example.com` |
+| `jira-api-token` | yes | Jira API token — store this as a GitHub secret | `ghp_XXXXXXXXXXXXXXXXXXXX` |
+| `jira-project-key` | yes | Key of the Jira project where tasks will be created | `PROJ` |
+| `jira-epic-key` | yes | Key of the Jira Epic to link new tasks to | `PROJ-1` |
+| `github-token` | no | GitHub token for posting comments. Defaults to `${{ github.token }}` | `${{ github.token }}` |
 
 ## Setting up secrets
 
@@ -50,6 +50,11 @@ In your repository, go to **Settings → Secrets and variables → Actions** and
 - `JIRA_BASE_URL` — e.g. `https://your-org.atlassian.net`
 - `JIRA_USER_EMAIL` — the email address linked to your Jira API token
 - `JIRA_API_TOKEN` — generate one at <https://id.atlassian.com/manage-profile/security/api-tokens>
+
+Then add the project and epic keys as repository variables under **Settings → Secrets and variables → Variables**:
+
+- `JIRA_PROJECT_KEY` — the key of your Jira project (e.g. `PROJ`)
+- `JIRA_EPIC_KEY` — the key of the Epic to link new tasks to (e.g. `PROJ-1`)
 
 ## How it works
 
@@ -60,10 +65,6 @@ When an issue is opened, the Action creates a Jira Task and posts this comment:
 When the issue is closed, the Action reads that comment to find the Jira issue key and transitions the task to Done.
 
 If the comment was deleted before the issue was closed, the Action posts a warning comment on the issue and exits without failing the workflow.
-
-## Jira project compatibility
-
-Task creation uses the `parent` field to link to an Epic. This works with **next-gen (team-managed) Jira projects**. Classic (company-managed) projects may use a different field (`customfield_10014`). Support for classic projects will be added in a future release.
 
 ## Versioning
 
