@@ -19,6 +19,11 @@ const expectedHeaders = {
 describe('createJiraRepository', () => {
   const client = createJiraRepository(jiraBaseUrl, jiraUserEmail, jiraApiToken)
 
+  const testGithubIssueLink = {
+    text: 'org/repo#1',
+    url: 'https://github.com/org/repo/issues/1',
+  }
+
   describe('createTask', () => {
     it('creates a Jira task and returns the issue key and browse URL', async () => {
       mockAxiosPost.mockResolvedValue({ data: { key: 'TEST-123' } })
@@ -26,7 +31,8 @@ describe('createJiraRepository', () => {
       const result = await client.createTask(
         'TEST',
         'Fix the login bug',
-        'Users cannot log in when 2FA is enabled.\n\nGitHub issue: https://github.com/org/repo/issues/1',
+        'Users cannot log in when 2FA is enabled.',
+        testGithubIssueLink,
         'TEST-1',
       )
 
@@ -36,13 +42,14 @@ describe('createJiraRepository', () => {
       })
     })
 
-    it('sends the correct request body to the Jira API', async () => {
+    it('sends body and GitHub link as separate ADF paragraphs', async () => {
       mockAxiosPost.mockResolvedValue({ data: { key: 'TEST-123' } })
 
       await client.createTask(
         'TEST',
         'Fix the login bug',
-        'Users cannot log in when 2FA is enabled.\n\nGitHub issue: https://github.com/org/repo/issues/1',
+        'Users cannot log in when 2FA is enabled.',
+        testGithubIssueLink,
         'TEST-1',
       )
 
@@ -59,10 +66,21 @@ describe('createJiraRepository', () => {
               content: [
                 {
                   type: 'paragraph',
+                  content: [{ type: 'text', text: 'Users cannot log in when 2FA is enabled.' }],
+                },
+                {
+                  type: 'paragraph',
                   content: [
+                    { type: 'text', text: 'GitHub issue: ' },
                     {
                       type: 'text',
-                      text: 'Users cannot log in when 2FA is enabled.\n\nGitHub issue: https://github.com/org/repo/issues/1',
+                      text: 'org/repo#1',
+                      marks: [
+                        {
+                          type: 'link',
+                          attrs: { href: 'https://github.com/org/repo/issues/1' },
+                        },
+                      ],
                     },
                   ],
                 },
@@ -73,6 +91,17 @@ describe('createJiraRepository', () => {
         },
         { headers: expectedHeaders },
       )
+    })
+
+    it('omits the body paragraph when issue body is null', async () => {
+      mockAxiosPost.mockResolvedValue({ data: { key: 'TEST-123' } })
+
+      await client.createTask('TEST', 'Fix the login bug', null, testGithubIssueLink, 'TEST-1')
+
+      const postedBody = mockAxiosPost.mock.calls[0][1] as {
+        fields: { description: { content: unknown[] } }
+      }
+      expect(postedBody.fields.description.content).toHaveLength(1)
     })
   })
 

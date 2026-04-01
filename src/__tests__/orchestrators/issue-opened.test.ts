@@ -50,13 +50,14 @@ describe('orchestrateIssueOpened', () => {
     mockPostComment.mockResolvedValue(undefined)
   })
 
-  it('creates a Jira task with the issue title and a description combining body and GitHub URL', async () => {
+  it('creates a Jira task with the issue title, body, and a GitHub issue hyperlink', async () => {
     await orchestrateIssueOpened(testIssue, testInputs)
 
     expect(mockCreateTask).toHaveBeenCalledWith(
       'TEST',
       'Fix the login bug',
-      'Users cannot log in when 2FA is enabled.\n\nGitHub issue: https://github.com/org/repo/issues/42',
+      'Users cannot log in when 2FA is enabled.',
+      { text: 'org/repo#42', url: 'https://github.com/org/repo/issues/42' },
       'TEST-1',
     )
   })
@@ -70,13 +71,14 @@ describe('orchestrateIssueOpened', () => {
     )
   })
 
-  it('uses only the GitHub URL as the description when the issue has no body', async () => {
+  it('passes null body when the issue has no body', async () => {
     await orchestrateIssueOpened({ ...testIssue, body: null }, testInputs)
 
     expect(mockCreateTask).toHaveBeenCalledWith(
       'TEST',
       'Fix the login bug',
-      'GitHub issue: https://github.com/org/repo/issues/42',
+      null,
+      { text: 'org/repo#42', url: 'https://github.com/org/repo/issues/42' },
       'TEST-1',
     )
   })

@@ -10,11 +10,17 @@ interface JiraTransition {
   name: string
 }
 
+export interface GitHubIssueLink {
+  text: string
+  url: string
+}
+
 export interface JiraRepository {
   createTask: (
     jiraProjectKey: string,
     summary: string,
-    description: string,
+    issueBody: string | null,
+    githubIssueLink: GitHubIssueLink,
     jiraEpicKey: string,
   ) => Promise<JiraTaskCreationResult>
   transitionToDone: (jiraIssueKey: string) => Promise<void>
@@ -42,9 +48,28 @@ export function createJiraRepository(
   async function createTask(
     jiraProjectKey: string,
     summary: string,
-    description: string,
+    issueBody: string | null,
+    githubIssueLink: GitHubIssueLink,
     jiraEpicKey: string,
   ): Promise<JiraTaskCreationResult> {
+    const adfContent = []
+
+    if (issueBody) {
+      adfContent.push({ type: 'paragraph', content: [{ type: 'text', text: issueBody }] })
+    }
+
+    adfContent.push({
+      type: 'paragraph',
+      content: [
+        { type: 'text', text: 'GitHub issue: ' },
+        {
+          type: 'text',
+          text: githubIssueLink.text,
+          marks: [{ type: 'link', attrs: { href: githubIssueLink.url } }],
+        },
+      ],
+    })
+
     try {
       const response = await axios.post(
         `${jiraBaseUrl}/rest/api/3/issue`,
@@ -56,12 +81,7 @@ export function createJiraRepository(
             description: {
               type: 'doc',
               version: 1,
-              content: [
-                {
-                  type: 'paragraph',
-                  content: [{ type: 'text', text: description }],
-                },
-              ],
+              content: adfContent,
             },
             parent: { key: jiraEpicKey },
           },
