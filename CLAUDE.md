@@ -11,6 +11,7 @@ npm run lint              # ESLint on src/**/*.ts
 npm run typecheck         # tsc --noEmit (no compilation output)
 npm run build             # Bundle with ncc → dist/index.js
 npm run format            # Prettier on src/**/*.ts
+npm run release -- v1.2.3 # Build, commit dist, tag, and push (triggers release workflow)
 
 # Run a single test file
 npx jest src/__tests__/inputs.test.ts
@@ -46,6 +47,20 @@ Tests mirror the source tree under `src/__tests__/`. Repository layers are mocke
 - **`transitionToDone` looks up the transition ID at runtime** — avoids hardcoding numeric IDs that differ between Jira instances.
 - **Error wrapping in jira-repository** — Axios errors include HTTP status + response body for debuggability.
 
+## Release Process
+
+`dist/` must be committed before tagging — it is what GitHub Actions executes at runtime.
+
+Use the release script, which handles everything in one command:
+
+```bash
+npm run release -- v1.2.3
+```
+
+This will: build dist, commit it if changed, create the tag, and push both `main` and the tag. The release workflow then validates dist is current and creates the GitHub Release.
+
+**Never push a tag manually without running `npm run release` first** — the release workflow will fail if dist is stale.
+
 ## Commit Conventions
 
 Conventional Commits format, enforced by commitlint + Husky:
@@ -65,3 +80,7 @@ Husky v9 runs on every commit:
 - `commit-msg`: commitlint (Conventional Commits)
 
 Hook files must be executable (mode 100755). If hooks silently stop running, check with `git ls-files -s .husky/`.
+
+## Documentation
+
+Keep `CLAUDE.md` and `README.md` up to date whenever you change commands, architecture, release process, or key design decisions. Do not defer documentation to a separate step — update it in the same session as the change.

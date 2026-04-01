@@ -67,11 +67,10 @@ Task creation uses the `parent` field to link to an Epic. This works with **next
 
 ## Releasing a new version
 
-Push a tag following the `vMAJOR.MINOR.PATCH` convention:
+Use the release script, which builds `dist/`, commits it if needed, tags, and pushes:
 
 ```bash
-git tag v1.0.0
-git push origin v1.0.0
+npm run release -- v1.0.0
 ```
 
-The release workflow will build `dist/`, commit it, and create a GitHub Release automatically.
+The release workflow will then validate the build and create a GitHub Release automatically.

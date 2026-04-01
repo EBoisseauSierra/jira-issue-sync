@@ -14,6 +14,7 @@
     "lint": "eslint 'src/**/*.ts'",
     "format": "prettier --write 'src/**/*.ts'",
     "typecheck": "tsc --noEmit",
+    "release": "scripts/release.sh",
     "prepare": "husky"
   },
   "dependencies": {
