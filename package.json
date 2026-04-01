@@ -1,5 +1,5 @@
 {
-  "name": "jira-issue-sync",
+  "name": "github-to-jira-issues-sync",
   "version": "0.1.0",
   "description": "GitHub Action: synchronise GitHub issues with Jira tasks",
   "private": true,

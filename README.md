@@ -1,4 +1,4 @@
-# jira-issue-sync
+# GitHub-to-Jira Issues Sync
 
 A GitHub Action that keeps GitHub issues and Jira tasks in sync.
 
@@ -23,7 +23,7 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - uses: EBoisseauSierra/jira-issue-sync@v1
+      - uses: EBoisseauSierra/github-to-jira-issues-sync@v0
         with:
           jira-base-url: ${{ secrets.JIRA_BASE_URL }}
           jira-user-email: ${{ secrets.JIRA_USER_EMAIL }}
