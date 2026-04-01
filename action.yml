@@ -1,6 +1,6 @@
 name: 'Jira Issue Sync'
 description: 'Creates a Jira Task when a GitHub issue is opened, and closes it when the issue is closed.'
-author: 'your-github-handle'
+author: 'Étienne Boisseau-Sierra'
 
 inputs:
   jira-base-url:
