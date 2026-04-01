@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import { ActionInputs } from '../inputs'
-import { createJiraClient } from '../jira-client'
-import { createGitHubClient } from '../github-client'
+import { createJiraRepository } from '../repositories/jira-repository'
+import { createGitHubRepository } from '../repositories/github-repository'
 
 interface GitHubIssueOpenedPayload {
   number: number
@@ -10,16 +10,20 @@ interface GitHubIssueOpenedPayload {
   html_url: string
 }
 
-export async function handleIssueOpened(
+export async function orchestrateIssueOpened(
   issue: GitHubIssueOpenedPayload,
   inputs: ActionInputs,
 ): Promise<void> {
-  const jiraClient = createJiraClient(inputs.jiraBaseUrl, inputs.jiraUserEmail, inputs.jiraApiToken)
-  const githubClient = createGitHubClient(inputs.githubToken)
+  const jiraRepository = createJiraRepository(
+    inputs.jiraBaseUrl,
+    inputs.jiraUserEmail,
+    inputs.jiraApiToken,
+  )
+  const githubRepository = createGitHubRepository(inputs.githubToken)
 
   const jiraTaskDescription = buildJiraTaskDescription(issue.body, issue.html_url)
 
-  const { jiraIssueKey, jiraIssueUrl } = await jiraClient.createTask(
+  const { jiraIssueKey, jiraIssueUrl } = await jiraRepository.createTask(
     inputs.jiraProjectKey,
     issue.title,
     jiraTaskDescription,
@@ -29,7 +33,7 @@ export async function handleIssueOpened(
   core.info(`Created Jira task: ${jiraIssueKey}`)
 
   const githubComment = `Jira task created: [${jiraIssueKey}](${jiraIssueUrl})`
-  await githubClient.postComment(issue.number, githubComment)
+  await githubRepository.postComment(issue.number, githubComment)
 
   core.info(`Posted Jira task link as comment on GitHub issue #${issue.number}`)
 }

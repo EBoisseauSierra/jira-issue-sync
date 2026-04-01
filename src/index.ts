@@ -1,8 +1,8 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import { readActionInputs } from './inputs'
-import { handleIssueOpened } from './handlers/opened'
-import { handleIssueClosed } from './handlers/closed'
+import { orchestrateIssueOpened } from './orchestrators/issue-opened'
+import { orchestrateIssueClosed } from './orchestrators/issue-closed'
 
 export async function run(): Promise<void> {
   const inputs = readActionInputs()
@@ -20,9 +20,9 @@ export async function run(): Promise<void> {
   }
 
   if (eventAction === 'opened') {
-    await handleIssueOpened(issue, inputs)
+    await orchestrateIssueOpened(issue, inputs)
   } else if (eventAction === 'closed') {
-    await handleIssueClosed(issue, inputs)
+    await orchestrateIssueClosed(issue, inputs)
   } else {
     core.setFailed(
       `Unexpected issue event action: "${eventAction}". This action only handles "opened" and "closed" events.`,

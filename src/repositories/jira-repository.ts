@@ -10,7 +10,7 @@ interface JiraTransition {
   name: string
 }
 
-export interface JiraClient {
+export interface JiraRepository {
   createTask: (
     jiraProjectKey: string,
     summary: string,
@@ -20,11 +20,11 @@ export interface JiraClient {
   transitionToDone: (jiraIssueKey: string) => Promise<void>
 }
 
-export function createJiraClient(
+export function createJiraRepository(
   jiraBaseUrl: string,
   jiraUserEmail: string,
   jiraApiToken: string,
-): JiraClient {
+): JiraRepository {
   const authorizationHeader = `Basic ${Buffer.from(`${jiraUserEmail}:${jiraApiToken}`).toString('base64')}`
   const headers = {
     Authorization: authorizationHeader,

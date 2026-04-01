@@ -1,18 +1,22 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
-import { handleIssueOpened } from '../handlers/opened'
-import { handleIssueClosed } from '../handlers/closed'
+import { orchestrateIssueOpened } from '../orchestrators/issue-opened'
+import { orchestrateIssueClosed } from '../orchestrators/issue-closed'
 import { readActionInputs } from '../inputs'
 
 jest.mock('@actions/core')
 jest.mock('@actions/github')
-jest.mock('../handlers/opened')
-jest.mock('../handlers/closed')
+jest.mock('../orchestrators/issue-opened')
+jest.mock('../orchestrators/issue-closed')
 jest.mock('../inputs')
 
 const mockReadActionInputs = readActionInputs as jest.MockedFunction<typeof readActionInputs>
-const mockHandleIssueOpened = handleIssueOpened as jest.MockedFunction<typeof handleIssueOpened>
-const mockHandleIssueClosed = handleIssueClosed as jest.MockedFunction<typeof handleIssueClosed>
+const mockOrchestrateIssueOpened = orchestrateIssueOpened as jest.MockedFunction<
+  typeof orchestrateIssueOpened
+>
+const mockOrchestrateIssueClosed = orchestrateIssueClosed as jest.MockedFunction<
+  typeof orchestrateIssueClosed
+>
 const mockSetFailed = core.setFailed as jest.MockedFunction<typeof core.setFailed>
 
 const testInputs = {
@@ -38,11 +42,11 @@ import { run } from '../index'
 describe('run', () => {
   beforeEach(() => {
     mockReadActionInputs.mockReturnValue(testInputs)
-    mockHandleIssueOpened.mockResolvedValue(undefined)
-    mockHandleIssueClosed.mockResolvedValue(undefined)
+    mockOrchestrateIssueOpened.mockResolvedValue(undefined)
+    mockOrchestrateIssueClosed.mockResolvedValue(undefined)
   })
 
-  it('calls handleIssueOpened when the event action is "opened"', async () => {
+  it('calls orchestrateIssueOpened when the event action is "opened"', async () => {
     Object.defineProperty(github, 'context', {
       value: { payload: { action: 'opened', issue: testIssue } },
       writable: true,
@@ -50,11 +54,11 @@ describe('run', () => {
 
     await run()
 
-    expect(mockHandleIssueOpened).toHaveBeenCalledWith(testIssue, testInputs)
-    expect(mockHandleIssueClosed).not.toHaveBeenCalled()
+    expect(mockOrchestrateIssueOpened).toHaveBeenCalledWith(testIssue, testInputs)
+    expect(mockOrchestrateIssueClosed).not.toHaveBeenCalled()
   })
 
-  it('calls handleIssueClosed when the event action is "closed"', async () => {
+  it('calls orchestrateIssueClosed when the event action is "closed"', async () => {
     Object.defineProperty(github, 'context', {
       value: { payload: { action: 'closed', issue: testIssue } },
       writable: true,
@@ -62,8 +66,8 @@ describe('run', () => {
 
     await run()
 
-    expect(mockHandleIssueClosed).toHaveBeenCalledWith(testIssue, testInputs)
-    expect(mockHandleIssueOpened).not.toHaveBeenCalled()
+    expect(mockOrchestrateIssueClosed).toHaveBeenCalledWith(testIssue, testInputs)
+    expect(mockOrchestrateIssueOpened).not.toHaveBeenCalled()
   })
 
   it('calls core.setFailed when the event payload contains no issue', async () => {

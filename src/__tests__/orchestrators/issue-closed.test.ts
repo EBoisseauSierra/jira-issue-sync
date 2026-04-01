@@ -1,15 +1,22 @@
 import * as core from '@actions/core'
-import { handleIssueClosed, findJiraIssueKeyInComments } from '../../handlers/closed'
-import { createJiraClient } from '../../jira-client'
-import { createGitHubClient } from '../../github-client'
+import {
+  orchestrateIssueClosed,
+  findJiraIssueKeyInComments,
+} from '../../orchestrators/issue-closed'
+import { createJiraRepository } from '../../repositories/jira-repository'
+import { createGitHubRepository } from '../../repositories/github-repository'
 import { ActionInputs } from '../../inputs'
 
 jest.mock('@actions/core')
-jest.mock('../../jira-client')
-jest.mock('../../github-client')
+jest.mock('../../repositories/jira-repository')
+jest.mock('../../repositories/github-repository')
 
-const mockCreateJiraClient = createJiraClient as jest.MockedFunction<typeof createJiraClient>
-const mockCreateGitHubClient = createGitHubClient as jest.MockedFunction<typeof createGitHubClient>
+const mockCreateJiraRepository = createJiraRepository as jest.MockedFunction<
+  typeof createJiraRepository
+>
+const mockCreateGitHubRepository = createGitHubRepository as jest.MockedFunction<
+  typeof createGitHubRepository
+>
 
 const testInputs: ActionInputs = {
   jiraBaseUrl: 'https://test.atlassian.net',
@@ -20,18 +27,18 @@ const testInputs: ActionInputs = {
   githubToken: 'github-test-token',
 }
 
-describe('handleIssueClosed', () => {
+describe('orchestrateIssueClosed', () => {
   const mockTransitionToDone = jest.fn()
   const mockFetchComments = jest.fn()
   const mockPostComment = jest.fn()
   const mockCoreWarning = core.warning as jest.MockedFunction<typeof core.warning>
 
   beforeEach(() => {
-    mockCreateJiraClient.mockReturnValue({
+    mockCreateJiraRepository.mockReturnValue({
       createTask: jest.fn(),
       transitionToDone: mockTransitionToDone,
     })
-    mockCreateGitHubClient.mockReturnValue({
+    mockCreateGitHubRepository.mockReturnValue({
       postComment: mockPostComment,
       fetchComments: mockFetchComments,
     })
@@ -48,7 +55,7 @@ describe('handleIssueClosed', () => {
       },
     ])
 
-    await handleIssueClosed({ number: 42 }, testInputs)
+    await orchestrateIssueClosed({ number: 42 }, testInputs)
 
     expect(mockTransitionToDone).toHaveBeenCalledWith('TEST-99')
     expect(mockPostComment).not.toHaveBeenCalled()
@@ -57,7 +64,7 @@ describe('handleIssueClosed', () => {
   it('logs a warning and posts a comment when no Jira link comment is found', async () => {
     mockFetchComments.mockResolvedValue([{ id: 1, body: 'Just a regular comment' }])
 
-    await handleIssueClosed({ number: 42 }, testInputs)
+    await orchestrateIssueClosed({ number: 42 }, testInputs)
 
     expect(mockTransitionToDone).not.toHaveBeenCalled()
     expect(mockCoreWarning).toHaveBeenCalled()
@@ -67,7 +74,7 @@ describe('handleIssueClosed', () => {
   it('logs a warning and posts a comment when there are no comments at all', async () => {
     mockFetchComments.mockResolvedValue([])
 
-    await handleIssueClosed({ number: 42 }, testInputs)
+    await orchestrateIssueClosed({ number: 42 }, testInputs)
 
     expect(mockTransitionToDone).not.toHaveBeenCalled()
     expect(mockCoreWarning).toHaveBeenCalled()

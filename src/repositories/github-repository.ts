@@ -5,12 +5,12 @@ export interface GitHubComment {
   body: string
 }
 
-export interface GitHubClient {
+export interface GitHubRepository {
   postComment: (issueNumber: number, body: string) => Promise<void>
   fetchComments: (issueNumber: number) => Promise<GitHubComment[]>
 }
 
-export function createGitHubClient(githubToken: string): GitHubClient {
+export function createGitHubRepository(githubToken: string): GitHubRepository {
   const octokit = github.getOctokit(githubToken)
   const { owner, repo } = github.context.repo
 

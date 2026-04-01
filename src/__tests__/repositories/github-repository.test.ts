@@ -1,5 +1,5 @@
 import * as github from '@actions/github'
-import { createGitHubClient } from '../github-client'
+import { createGitHubRepository } from '../../repositories/github-repository'
 
 jest.mock('@actions/github')
 
@@ -21,8 +21,8 @@ Object.defineProperty(github, 'context', {
   writable: true,
 })
 
-describe('createGitHubClient', () => {
-  const client = createGitHubClient('test-github-token')
+describe('createGitHubRepository', () => {
+  const client = createGitHubRepository('test-github-token')
 
   describe('postComment', () => {
     it('posts a comment on the specified GitHub issue', async () => {

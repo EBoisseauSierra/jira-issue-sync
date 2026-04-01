@@ -1,14 +1,18 @@
-import { handleIssueOpened } from '../../handlers/opened'
-import { createJiraClient } from '../../jira-client'
-import { createGitHubClient } from '../../github-client'
+import { orchestrateIssueOpened } from '../../orchestrators/issue-opened'
+import { createJiraRepository } from '../../repositories/jira-repository'
+import { createGitHubRepository } from '../../repositories/github-repository'
 import { ActionInputs } from '../../inputs'
 
 jest.mock('@actions/core')
-jest.mock('../../jira-client')
-jest.mock('../../github-client')
+jest.mock('../../repositories/jira-repository')
+jest.mock('../../repositories/github-repository')
 
-const mockCreateJiraClient = createJiraClient as jest.MockedFunction<typeof createJiraClient>
-const mockCreateGitHubClient = createGitHubClient as jest.MockedFunction<typeof createGitHubClient>
+const mockCreateJiraRepository = createJiraRepository as jest.MockedFunction<
+  typeof createJiraRepository
+>
+const mockCreateGitHubRepository = createGitHubRepository as jest.MockedFunction<
+  typeof createGitHubRepository
+>
 
 const testInputs: ActionInputs = {
   jiraBaseUrl: 'https://test.atlassian.net',
@@ -26,16 +30,16 @@ const testIssue = {
   html_url: 'https://github.com/org/repo/issues/42',
 }
 
-describe('handleIssueOpened', () => {
+describe('orchestrateIssueOpened', () => {
   const mockCreateTask = jest.fn()
   const mockPostComment = jest.fn()
 
   beforeEach(() => {
-    mockCreateJiraClient.mockReturnValue({
+    mockCreateJiraRepository.mockReturnValue({
       createTask: mockCreateTask,
       transitionToDone: jest.fn(),
     })
-    mockCreateGitHubClient.mockReturnValue({
+    mockCreateGitHubRepository.mockReturnValue({
       postComment: mockPostComment,
       fetchComments: jest.fn(),
     })
@@ -47,7 +51,7 @@ describe('handleIssueOpened', () => {
   })
 
   it('creates a Jira task with the issue title and a description combining body and GitHub URL', async () => {
-    await handleIssueOpened(testIssue, testInputs)
+    await orchestrateIssueOpened(testIssue, testInputs)
 
     expect(mockCreateTask).toHaveBeenCalledWith(
       'TEST',
@@ -58,7 +62,7 @@ describe('handleIssueOpened', () => {
   })
 
   it('posts a markdown comment on the GitHub issue with the Jira task link', async () => {
-    await handleIssueOpened(testIssue, testInputs)
+    await orchestrateIssueOpened(testIssue, testInputs)
 
     expect(mockPostComment).toHaveBeenCalledWith(
       42,
@@ -67,7 +71,7 @@ describe('handleIssueOpened', () => {
   })
 
   it('uses only the GitHub URL as the description when the issue has no body', async () => {
-    await handleIssueOpened({ ...testIssue, body: null }, testInputs)
+    await orchestrateIssueOpened({ ...testIssue, body: null }, testInputs)
 
     expect(mockCreateTask).toHaveBeenCalledWith(
       'TEST',

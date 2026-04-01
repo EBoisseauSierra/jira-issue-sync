@@ -34410,214 +34410,6 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
-/***/ 7890:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.createGitHubClient = createGitHubClient;
-const github = __importStar(__nccwpck_require__(3228));
-function createGitHubClient(githubToken) {
-    const octokit = github.getOctokit(githubToken);
-    const { owner, repo } = github.context.repo;
-    async function postComment(issueNumber, body) {
-        await octokit.rest.issues.createComment({
-            owner,
-            repo,
-            issue_number: issueNumber,
-            body,
-        });
-    }
-    async function fetchComments(issueNumber) {
-        const response = await octokit.rest.issues.listComments({
-            owner,
-            repo,
-            issue_number: issueNumber,
-        });
-        return response.data.map((comment) => ({
-            id: comment.id,
-            body: comment.body ?? '',
-        }));
-    }
-    return { postComment, fetchComments };
-}
-
-
-/***/ }),
-
-/***/ 4429:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.handleIssueClosed = handleIssueClosed;
-exports.findJiraIssueKeyInComments = findJiraIssueKeyInComments;
-const core = __importStar(__nccwpck_require__(7484));
-const jira_client_1 = __nccwpck_require__(163);
-const github_client_1 = __nccwpck_require__(7890);
-// Matches the comment posted by handleIssueOpened, e.g.:
-// "Jira task created: [TEST-99](https://test.atlassian.net/browse/TEST-99)"
-const JIRA_TASK_LINK_COMMENT_PATTERN = /Jira task created: \[([A-Z][A-Z0-9]+-\d+)\]\([^)]+\)/;
-async function handleIssueClosed(issue, inputs) {
-    const jiraClient = (0, jira_client_1.createJiraClient)(inputs.jiraBaseUrl, inputs.jiraUserEmail, inputs.jiraApiToken);
-    const githubClient = (0, github_client_1.createGitHubClient)(inputs.githubToken);
-    const comments = await githubClient.fetchComments(issue.number);
-    const commentBodies = comments.map((comment) => comment.body);
-    const jiraIssueKey = findJiraIssueKeyInComments(commentBodies);
-    if (!jiraIssueKey) {
-        const warningMessage = `Could not find a linked Jira task in the comments of GitHub issue #${issue.number}. ` +
-            `The Jira task was not updated.`;
-        core.warning(warningMessage);
-        await githubClient.postComment(issue.number, `\u26a0\ufe0f ${warningMessage}`);
-        return;
-    }
-    await jiraClient.transitionToDone(jiraIssueKey);
-    core.info(`Transitioned Jira task ${jiraIssueKey} to Done`);
-}
-function findJiraIssueKeyInComments(commentBodies) {
-    for (const body of commentBodies) {
-        const match = body.match(JIRA_TASK_LINK_COMMENT_PATTERN);
-        if (match) {
-            return match[1];
-        }
-    }
-    return null;
-}
-
-
-/***/ }),
-
-/***/ 8292:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.handleIssueOpened = handleIssueOpened;
-const core = __importStar(__nccwpck_require__(7484));
-const jira_client_1 = __nccwpck_require__(163);
-const github_client_1 = __nccwpck_require__(7890);
-async function handleIssueOpened(issue, inputs) {
-    const jiraClient = (0, jira_client_1.createJiraClient)(inputs.jiraBaseUrl, inputs.jiraUserEmail, inputs.jiraApiToken);
-    const githubClient = (0, github_client_1.createGitHubClient)(inputs.githubToken);
-    const jiraTaskDescription = buildJiraTaskDescription(issue.body, issue.html_url);
-    const { jiraIssueKey, jiraIssueUrl } = await jiraClient.createTask(inputs.jiraProjectKey, issue.title, jiraTaskDescription, inputs.jiraEpicKey);
-    core.info(`Created Jira task: ${jiraIssueKey}`);
-    const githubComment = `Jira task created: [${jiraIssueKey}](${jiraIssueUrl})`;
-    await githubClient.postComment(issue.number, githubComment);
-    core.info(`Posted Jira task link as comment on GitHub issue #${issue.number}`);
-}
-function buildJiraTaskDescription(githubIssueBody, githubIssueUrl) {
-    if (githubIssueBody) {
-        return `${githubIssueBody}\n\nGitHub issue: ${githubIssueUrl}`;
-    }
-    return `GitHub issue: ${githubIssueUrl}`;
-}
-
-
-/***/ }),
-
 /***/ 9407:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -34661,8 +34453,8 @@ exports.run = run;
 const core = __importStar(__nccwpck_require__(7484));
 const github = __importStar(__nccwpck_require__(3228));
 const inputs_1 = __nccwpck_require__(8422);
-const opened_1 = __nccwpck_require__(8292);
-const closed_1 = __nccwpck_require__(4429);
+const issue_opened_1 = __nccwpck_require__(5986);
+const issue_closed_1 = __nccwpck_require__(759);
 async function run() {
     const inputs = (0, inputs_1.readActionInputs)();
     const eventAction = github.context.payload.action;
@@ -34675,10 +34467,10 @@ async function run() {
         return;
     }
     if (eventAction === 'opened') {
-        await (0, opened_1.handleIssueOpened)(issue, inputs);
+        await (0, issue_opened_1.orchestrateIssueOpened)(issue, inputs);
     }
     else if (eventAction === 'closed') {
-        await (0, closed_1.handleIssueClosed)(issue, inputs);
+        await (0, issue_closed_1.orchestrateIssueClosed)(issue, inputs);
     }
     else {
         core.setFailed(`Unexpected issue event action: "${eventAction}". This action only handles "opened" and "closed" events.`);
@@ -34746,7 +34538,215 @@ function readActionInputs() {
 
 /***/ }),
 
-/***/ 163:
+/***/ 759:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.orchestrateIssueClosed = orchestrateIssueClosed;
+exports.findJiraIssueKeyInComments = findJiraIssueKeyInComments;
+const core = __importStar(__nccwpck_require__(7484));
+const jira_repository_1 = __nccwpck_require__(5915);
+const github_repository_1 = __nccwpck_require__(1974);
+// Matches the comment posted by orchestrateIssueOpened, e.g.:
+// "Jira task created: [TEST-99](https://test.atlassian.net/browse/TEST-99)"
+const JIRA_TASK_LINK_COMMENT_PATTERN = /Jira task created: \[([A-Z][A-Z0-9]+-\d+)\]\([^)]+\)/;
+async function orchestrateIssueClosed(issue, inputs) {
+    const jiraRepository = (0, jira_repository_1.createJiraRepository)(inputs.jiraBaseUrl, inputs.jiraUserEmail, inputs.jiraApiToken);
+    const githubRepository = (0, github_repository_1.createGitHubRepository)(inputs.githubToken);
+    const comments = await githubRepository.fetchComments(issue.number);
+    const commentBodies = comments.map((comment) => comment.body);
+    const jiraIssueKey = findJiraIssueKeyInComments(commentBodies);
+    if (!jiraIssueKey) {
+        const warningMessage = `Could not find a linked Jira task in the comments of GitHub issue #${issue.number}. ` +
+            `The Jira task was not updated.`;
+        core.warning(warningMessage);
+        await githubRepository.postComment(issue.number, `\u26a0\ufe0f ${warningMessage}`);
+        return;
+    }
+    await jiraRepository.transitionToDone(jiraIssueKey);
+    core.info(`Transitioned Jira task ${jiraIssueKey} to Done`);
+}
+function findJiraIssueKeyInComments(commentBodies) {
+    for (const body of commentBodies) {
+        const match = body.match(JIRA_TASK_LINK_COMMENT_PATTERN);
+        if (match) {
+            return match[1];
+        }
+    }
+    return null;
+}
+
+
+/***/ }),
+
+/***/ 5986:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.orchestrateIssueOpened = orchestrateIssueOpened;
+const core = __importStar(__nccwpck_require__(7484));
+const jira_repository_1 = __nccwpck_require__(5915);
+const github_repository_1 = __nccwpck_require__(1974);
+async function orchestrateIssueOpened(issue, inputs) {
+    const jiraRepository = (0, jira_repository_1.createJiraRepository)(inputs.jiraBaseUrl, inputs.jiraUserEmail, inputs.jiraApiToken);
+    const githubRepository = (0, github_repository_1.createGitHubRepository)(inputs.githubToken);
+    const jiraTaskDescription = buildJiraTaskDescription(issue.body, issue.html_url);
+    const { jiraIssueKey, jiraIssueUrl } = await jiraRepository.createTask(inputs.jiraProjectKey, issue.title, jiraTaskDescription, inputs.jiraEpicKey);
+    core.info(`Created Jira task: ${jiraIssueKey}`);
+    const githubComment = `Jira task created: [${jiraIssueKey}](${jiraIssueUrl})`;
+    await githubRepository.postComment(issue.number, githubComment);
+    core.info(`Posted Jira task link as comment on GitHub issue #${issue.number}`);
+}
+function buildJiraTaskDescription(githubIssueBody, githubIssueUrl) {
+    if (githubIssueBody) {
+        return `${githubIssueBody}\n\nGitHub issue: ${githubIssueUrl}`;
+    }
+    return `GitHub issue: ${githubIssueUrl}`;
+}
+
+
+/***/ }),
+
+/***/ 1974:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.createGitHubRepository = createGitHubRepository;
+const github = __importStar(__nccwpck_require__(3228));
+function createGitHubRepository(githubToken) {
+    const octokit = github.getOctokit(githubToken);
+    const { owner, repo } = github.context.repo;
+    async function postComment(issueNumber, body) {
+        await octokit.rest.issues.createComment({
+            owner,
+            repo,
+            issue_number: issueNumber,
+            body,
+        });
+    }
+    async function fetchComments(issueNumber) {
+        const response = await octokit.rest.issues.listComments({
+            owner,
+            repo,
+            issue_number: issueNumber,
+        });
+        return response.data.map((comment) => ({
+            id: comment.id,
+            body: comment.body ?? '',
+        }));
+    }
+    return { postComment, fetchComments };
+}
+
+
+/***/ }),
+
+/***/ 5915:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -34755,9 +34755,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.createJiraClient = createJiraClient;
+exports.createJiraRepository = createJiraRepository;
 const axios_1 = __importDefault(__nccwpck_require__(7269));
-function createJiraClient(jiraBaseUrl, jiraUserEmail, jiraApiToken) {
+function createJiraRepository(jiraBaseUrl, jiraUserEmail, jiraApiToken) {
     const authorizationHeader = `Basic ${Buffer.from(`${jiraUserEmail}:${jiraApiToken}`).toString('base64')}`;
     const headers = {
         Authorization: authorizationHeader,

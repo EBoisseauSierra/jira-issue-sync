@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { createJiraClient } from '../jira-client'
+import { createJiraRepository } from '../../repositories/jira-repository'
 
 jest.mock('axios')
 
@@ -16,8 +16,8 @@ const expectedHeaders = {
   Accept: 'application/json',
 }
 
-describe('createJiraClient', () => {
-  const client = createJiraClient(jiraBaseUrl, jiraUserEmail, jiraApiToken)
+describe('createJiraRepository', () => {
+  const client = createJiraRepository(jiraBaseUrl, jiraUserEmail, jiraApiToken)
 
   describe('createTask', () => {
     it('creates a Jira task and returns the issue key and browse URL', async () => {
