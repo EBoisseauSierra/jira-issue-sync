@@ -1,32 +1,32 @@
-name: 'GitHub-to-Jira Issues Sync'
-description: 'Creates a Jira Task when a GitHub issue is opened, and closes it when the issue is closed.'
-author: 'Étienne Boisseau-Sierra'
+name: "GitHub-to-Jira Issues Sync"
+description: "Open a Jira Task for every new GitHub issue and keep them in sync."
+author: "Étienne Boisseau-Sierra"
 
 inputs:
   jira-base-url:
-    description: 'Your Atlassian domain, e.g. https://your-org.atlassian.net'
+    description: "Your Atlassian domain, e.g. https://your-org.atlassian.net"
     required: true
   jira-user-email:
-    description: 'Email address of the Jira user whose API token is provided'
+    description: "Email address of the Jira user whose API token is provided"
     required: true
   jira-api-token:
-    description: 'Jira API token (store this as a GitHub secret)'
+    description: "Jira API token (store this as a GitHub secret)"
     required: true
   jira-project-key:
-    description: 'Key of the Jira project where tasks will be created, e.g. MYPROJECT'
+    description: "Key of the Jira project where tasks will be created, e.g. MYPROJECT"
     required: true
   jira-epic-key:
-    description: 'Key of the Jira Epic to link new tasks to, e.g. MYPROJECT-42'
+    description: "Key of the Jira Epic to link new tasks to, e.g. MYPROJECT-42"
     required: true
   github-token:
-    description: 'GitHub token used to post comments on issues. Defaults to the built-in GITHUB_TOKEN.'
+    description: "GitHub token used to post comments on issues. Defaults to the built-in GITHUB_TOKEN."
     required: false
     default: ${{ github.token }}
 
 runs:
-  using: 'node20'
-  main: 'dist/index.js'
+  using: "node20"
+  main: "dist/index.js"
 
 branding:
-  icon: 'refresh-cw'
-  color: 'blue'
+  icon: "refresh-cw"
+  color: "yellow"

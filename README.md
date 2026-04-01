@@ -1,6 +1,6 @@
 # GitHub-to-Jira Issues Sync
 
-A GitHub Action that keeps GitHub issues and Jira tasks in sync.
+A GitHub Action that keeps Jira tasks in sync with GitHub issues.
 
 - When a GitHub issue is **opened**, a Jira Task is created and linked to a specified Epic. A comment is posted on the GitHub issue with a link to the Jira task.
 - When a GitHub issue is **closed**, the linked Jira task is transitioned to **Done**.
