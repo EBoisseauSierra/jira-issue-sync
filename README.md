@@ -65,6 +65,12 @@ If the comment was deleted before the issue was closed, the Action posts a warni
 
 Task creation uses the `parent` field to link to an Epic. This works with **next-gen (team-managed) Jira projects**. Classic (company-managed) projects may use a different field (`customfield_10014`). Support for classic projects will be added in a future release.
 
+## Versioning
+
+This project follows [Semantic Versioning](https://semver.org) (`vMAJOR.MINOR.PATCH`) and [Conventional Commits](https://www.conventionalcommits.org).
+
+Each release publishes a floating major-version tag (e.g. `v1`) that always points to the latest `v1.x.y` release. Pin to `@v1` for automatic minor/patch updates, or to a full tag like `@v1.2.3` for a locked version.
+
 ## Releasing a new version
 
 Use the release script, which builds `dist/`, commits it if needed, tags, and pushes:
@@ -73,4 +79,4 @@ Use the release script, which builds `dist/`, commits it if needed, tags, and pu
 npm run release -- v1.0.0
 ```
 
-The release workflow will then validate the build and create a GitHub Release automatically.
+The release workflow will then validate the build, create a GitHub Release, and update the floating `v1` tag automatically.
