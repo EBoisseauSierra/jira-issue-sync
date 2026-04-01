@@ -34660,18 +34660,16 @@ const github_repository_1 = __nccwpck_require__(1974);
 async function orchestrateIssueOpened(issue, inputs) {
     const jiraRepository = (0, jira_repository_1.createJiraRepository)(inputs.jiraBaseUrl, inputs.jiraUserEmail, inputs.jiraApiToken);
     const githubRepository = (0, github_repository_1.createGitHubRepository)(inputs.githubToken);
-    const jiraTaskDescription = buildJiraTaskDescription(issue.body, issue.html_url);
-    const { jiraIssueKey, jiraIssueUrl } = await jiraRepository.createTask(inputs.jiraProjectKey, issue.title, jiraTaskDescription, inputs.jiraEpicKey);
+    const urlParts = new URL(issue.html_url).pathname.split('/');
+    const githubIssueLink = {
+        text: `${urlParts[1]}/${urlParts[2]}#${issue.number}`,
+        url: issue.html_url,
+    };
+    const { jiraIssueKey, jiraIssueUrl } = await jiraRepository.createTask(inputs.jiraProjectKey, issue.title, issue.body, githubIssueLink, inputs.jiraEpicKey);
     core.info(`Created Jira task: ${jiraIssueKey}`);
     const githubComment = `Jira task created: [${jiraIssueKey}](${jiraIssueUrl})`;
     await githubRepository.postComment(issue.number, githubComment);
     core.info(`Posted Jira task link as comment on GitHub issue #${issue.number}`);
-}
-function buildJiraTaskDescription(githubIssueBody, githubIssueUrl) {
-    if (githubIssueBody) {
-        return `${githubIssueBody}\n\nGitHub issue: ${githubIssueUrl}`;
-    }
-    return `GitHub issue: ${githubIssueUrl}`;
 }
 
 
@@ -34770,7 +34768,22 @@ function createJiraRepository(jiraBaseUrl, jiraUserEmail, jiraApiToken) {
         }
         return contextMessage;
     }
-    async function createTask(jiraProjectKey, summary, description, jiraEpicKey) {
+    async function createTask(jiraProjectKey, summary, issueBody, githubIssueLink, jiraEpicKey) {
+        const adfContent = [];
+        if (issueBody) {
+            adfContent.push({ type: 'paragraph', content: [{ type: 'text', text: issueBody }] });
+        }
+        adfContent.push({
+            type: 'paragraph',
+            content: [
+                { type: 'text', text: 'GitHub issue: ' },
+                {
+                    type: 'text',
+                    text: githubIssueLink.text,
+                    marks: [{ type: 'link', attrs: { href: githubIssueLink.url } }],
+                },
+            ],
+        });
         try {
             const response = await axios_1.default.post(`${jiraBaseUrl}/rest/api/3/issue`, {
                 fields: {
@@ -34780,12 +34793,7 @@ function createJiraRepository(jiraBaseUrl, jiraUserEmail, jiraApiToken) {
                     description: {
                         type: 'doc',
                         version: 1,
-                        content: [
-                            {
-                                type: 'paragraph',
-                                content: [{ type: 'text', text: description }],
-                            },
-                        ],
+                        content: adfContent,
                     },
                     parent: { key: jiraEpicKey },
                 },
