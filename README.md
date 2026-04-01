@@ -23,7 +23,7 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - uses: your-github-handle/jira-issue-sync@v1
+      - uses: EBoisseauSierra/jira-issue-sync@v1
         with:
           jira-base-url: ${{ secrets.JIRA_BASE_URL }}
           jira-user-email: ${{ secrets.JIRA_USER_EMAIL }}
@@ -49,7 +49,7 @@ In your repository, go to **Settings → Secrets and variables → Actions** and
 
 - `JIRA_BASE_URL` — e.g. `https://your-org.atlassian.net`
 - `JIRA_USER_EMAIL` — the email address linked to your Jira API token
-- `JIRA_API_TOKEN` — generate one at https://id.atlassian.com/manage-profile/security/api-tokens
+- `JIRA_API_TOKEN` — generate one at <https://id.atlassian.com/manage-profile/security/api-tokens>
 
 ## How it works
 
