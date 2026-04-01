@@ -25,14 +25,17 @@ This is a TypeScript GitHub Action bundled with `@vercel/ncc` into `dist/index.j
 The codebase follows an n-tier architecture:
 
 **Controller** — processes external inputs and dispatches to the appropriate orchestrator:
+
 - `src/index.ts` — reads the GitHub webhook event action (`opened`/`closed`), validates the payload, and delegates to the matching orchestrator. Also calls `run().catch(...)` at the top level so unhandled rejections surface as workflow failures.
 - `src/inputs.ts` — reads and validates all GitHub Actions inputs into a typed `ActionInputs` object.
 
 **Orchestrators** — coordinate multiple services to fulfil a use case:
+
 - `src/orchestrators/issue-opened.ts` — calls the Jira repository to create a task, then the GitHub repository to post a link comment.
 - `src/orchestrators/issue-closed.ts` — calls the GitHub repository to fetch comments, extracts the Jira issue key, then calls the Jira repository to transition the task to Done.
 
 **Repositories** — implement the interface with external systems (Jira REST API, GitHub REST API):
+
 - `src/repositories/jira-repository.ts` — `createJiraRepository()` returns `{ createTask, transitionToDone }`. Handles auth headers, Atlassian Document Format, and wraps Axios errors with HTTP status + response body.
 - `src/repositories/github-repository.ts` — `createGitHubRepository()` returns `{ postComment, fetchComments }`. Wraps Octokit and normalises null comment bodies.
 
@@ -65,7 +68,7 @@ This will: build dist, commit it if changed, create the tag, and push both `main
 
 Conventional Commits format, enforced by commitlint + Husky:
 
-```
+```text
 <type>(<scope>): <short description>
 
 <body explaining what and why>
@@ -76,6 +79,7 @@ Use plain `git commit -m "..."` — no GPG flags.
 ## Pre-commit Hooks
 
 Husky v9 runs on every commit:
+
 - `pre-commit`: lint-staged (eslint + prettier on staged `.ts` files) + `tsc --noEmit`
 - `commit-msg`: commitlint (Conventional Commits)
 
@@ -84,3 +88,7 @@ Hook files must be executable (mode 100755). If hooks silently stop running, che
 ## Documentation
 
 Keep `CLAUDE.md` and `README.md` up to date whenever you change commands, architecture, release process, or key design decisions. Do not defer documentation to a separate step — update it in the same session as the change.
+
+## Commit Granularity
+
+One commit = one concern. A commit message must never contain "and" or ";" connecting two distinct changes. If two things are being done, they go in two separate commits.
