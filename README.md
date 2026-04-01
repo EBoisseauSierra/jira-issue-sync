@@ -1,0 +1,77 @@
+# jira-issue-sync
+
+A GitHub Action that keeps GitHub issues and Jira tasks in sync.
+
+- When a GitHub issue is **opened**, a Jira Task is created and linked to a specified Epic. A comment is posted on the GitHub issue with a link to the Jira task.
+- When a GitHub issue is **closed**, the linked Jira task is transitioned to **Done**.
+
+GitHub is the source of truth.
+
+## Usage
+
+Add this workflow file to any repository you want to sync:
+
+```yaml
+# .github/workflows/jira-sync.yml
+name: Sync issues with Jira
+
+on:
+  issues:
+    types: [opened, closed]
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: your-github-handle/jira-issue-sync@v1
+        with:
+          jira-base-url: ${{ secrets.JIRA_BASE_URL }}
+          jira-user-email: ${{ secrets.JIRA_USER_EMAIL }}
+          jira-api-token: ${{ secrets.JIRA_API_TOKEN }}
+          jira-project-key: 'MYPROJECT'
+          jira-epic-key: 'MYPROJECT-42'
+```
+
+## Inputs
+
+| Input | Required | Description |
+|---|---|---|
+| `jira-base-url` | yes | Your Atlassian domain, e.g. `https://your-org.atlassian.net` |
+| `jira-user-email` | yes | Email of the Jira user whose API token you are using |
+| `jira-api-token` | yes | Jira API token — store this as a GitHub secret |
+| `jira-project-key` | yes | Key of the Jira project where tasks will be created |
+| `jira-epic-key` | yes | Key of the Jira Epic to link new tasks to |
+| `github-token` | no | GitHub token for posting comments. Defaults to `${{ github.token }}` |
+
+## Setting up secrets
+
+In your repository, go to **Settings → Secrets and variables → Actions** and add:
+
+- `JIRA_BASE_URL` — e.g. `https://your-org.atlassian.net`
+- `JIRA_USER_EMAIL` — the email address linked to your Jira API token
+- `JIRA_API_TOKEN` — generate one at https://id.atlassian.com/manage-profile/security/api-tokens
+
+## How it works
+
+When an issue is opened, the Action creates a Jira Task and posts this comment:
+
+> Jira task created: [PROJ-123](https://your-org.atlassian.net/browse/PROJ-123)
+
+When the issue is closed, the Action reads that comment to find the Jira issue key and transitions the task to Done.
+
+If the comment was deleted before the issue was closed, the Action posts a warning comment on the issue and exits without failing the workflow.
+
+## Jira project compatibility
+
+Task creation uses the `parent` field to link to an Epic. This works with **next-gen (team-managed) Jira projects**. Classic (company-managed) projects may use a different field (`customfield_10014`). Support for classic projects will be added in a future release.
+
+## Releasing a new version
+
+Push a tag following the `vMAJOR.MINOR.PATCH` convention:
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+The release workflow will build `dist/`, commit it, and create a GitHub Release automatically.
