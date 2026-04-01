@@ -3,3 +3,5 @@ node_modules/
 coverage/
 CHANGELOG_RELEASE.md
 licenses.txt
+.claude/
+src/.placeholder

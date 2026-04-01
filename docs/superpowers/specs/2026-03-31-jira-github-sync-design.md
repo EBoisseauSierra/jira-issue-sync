@@ -175,4 +175,3 @@ All commits must follow [Conventional Commits](https://www.conventionalcommits.o
 ```
 
 - Each commit does exactly one thing.
-- `git commit -Ss` (GPG-signed + sign-off) on every commit.
